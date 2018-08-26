@@ -6,7 +6,7 @@ import model
 import utils
 
 # env_small: 9x9, env_regular: 15x15
-from env import env_small as game
+from env import env_regular as game
 
 
 BOARD_SIZE = game.Return_BoardParams()[0]
@@ -20,8 +20,8 @@ IN_PLANES_ENEMY = 5
 OUT_PLANES_PLAYER = 128
 OUT_PLANES_ENEMY = 128
 
-N_MCTS = 3000
-N_MATCH = 3
+N_MCTS = 1000
+N_MATCH = 12
 
 use_cuda = torch.cuda.is_available()
 device = torch.device('cuda' if use_cuda else 'cpu')
@@ -31,8 +31,8 @@ device = torch.device('cuda' if use_cuda else 'cpu')
 #       'uct': UCB MCTS           'random': random        #
 # ======================================================= #
 # example)
-player_model_path = 'human'
-enemy_model_path = './data/180822_5800_134306_step_model.pickle'
+player_model_path = './data/180826_73_168180_step_model.pickle'
+enemy_model_path = './data/180823_64_147654_step_model.pickle'
 
 
 class Evaluator(object):

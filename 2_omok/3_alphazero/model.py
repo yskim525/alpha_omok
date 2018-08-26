@@ -1,5 +1,3 @@
-import numpy as np
-import torch
 from torch import nn
 
 
@@ -81,6 +79,58 @@ class PVNet(nn.Module):
         self.bn1 = nn.BatchNorm2d(planes)
         self.relu = nn.ReLU()
         self.layers = self._make_layer(ResBlock, planes, n_block)
+        self.policy_head = PolicyHead(planes, board_size)
+        self.value_head = ValueHead(planes, board_size)
+
+        for m in self.modules():
+            if isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
+    def _make_layer(self, block, planes, n_block):
+        blocks = []
+        for i in range(n_block):
+            blocks.append(block(planes, planes))
+        return nn.Sequential(*blocks)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.layers(x)
+        p = self.policy_head(x)
+        v = self.value_head(x)
+        return p, v
+
+
+class ResBlockJ(nn.Module):
+    def __init__(self, inplanes, planes):
+        super(ResBlockJ, self).__init__()
+        self.conv1 = conv3x3(inplanes, planes)
+        self.bn1 = nn.BatchNorm2d(planes)
+        self.relu = nn.ReLU()
+        self.conv2 = conv3x3(planes, planes)
+        self.bn2 = nn.BatchNorm2d(planes)
+
+    def forward(self, x):
+        residual = x
+        out = self.conv1(x)
+        out = self.relu(out)
+        out = self.bn1(out)
+        out = self.conv2(out)
+        out += residual
+        out = self.relu(out)
+        out = self.bn2(out)
+        return out
+
+
+class PVNetJ(nn.Module):
+    def __init__(self, n_block, inplanes, planes, board_size):
+        super(PVNetJ, self).__init__()
+        self.conv1 = conv3x3(inplanes, planes)
+        self.bn1 = nn.BatchNorm2d(planes)
+        self.relu = nn.ReLU()
+        self.layers = self._make_layer(ResBlockJ, planes, n_block)
         self.policy_head = PolicyHead(planes, board_size)
         self.value_head = ValueHead(planes, board_size)
 

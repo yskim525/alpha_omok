@@ -26,7 +26,7 @@ IN_PLANES_ENEMY = 5
 OUT_PLANES_PLAYER = 128
 OUT_PLANES_ENEMY = 128
 
-N_MCTS = 3000
+N_MCTS = 400
 N_MATCH = 12
 
 use_cuda = torch.cuda.is_available()
@@ -47,8 +47,8 @@ enemy_agent_info = AgentInfo(BOARD_SIZE)
 #   'puct': PUCT MCTS     'uct': UCT MCTS     'web': human web player   #
 # ===================================================================== #
 
-player_model_path = './data/180822_6000_142410_step_model.pickle'
-enemy_model_path = './data/180822_6000_142410_step_model.pickle'
+player_model_path = './data/180825_900_15827_step_model.pickle'
+enemy_model_path = './data/180818_900_17841_step_model.pickle'
 
 # ===================================================================== #
 
@@ -76,10 +76,10 @@ class Evaluator(object):
                                            N_MCTS,
                                            IN_PLANES_PLAYER,
                                            noise=False)
-            self.player.model = model.PVNet(N_BLOCKS_PLAYER,
-                                            IN_PLANES_PLAYER,
-                                            OUT_PLANES_PLAYER,
-                                            BOARD_SIZE).to(device)
+            self.player.model = model.PVNetJ(N_BLOCKS_PLAYER,
+                                             IN_PLANES_PLAYER,
+                                             OUT_PLANES_PLAYER,
+                                             BOARD_SIZE).to(device)
             state_a = self.player.model.state_dict()
             my_state_a = torch.load(
                 model_path_a, map_location='cuda:0' if use_cuda else 'cpu')
@@ -93,10 +93,10 @@ class Evaluator(object):
                                            N_MCTS,
                                            IN_PLANES_PLAYER,
                                            noise=False)
-            self.player.model = model.PVNet(N_BLOCKS_PLAYER,
-                                            IN_PLANES_PLAYER,
-                                            OUT_PLANES_PLAYER,
-                                            BOARD_SIZE).to(device)
+            self.player.model = model.PVNetJ(N_BLOCKS_PLAYER,
+                                             IN_PLANES_PLAYER,
+                                             OUT_PLANES_PLAYER,
+                                             BOARD_SIZE).to(device)
         if model_path_b == 'random':
             print('load enemy model:', model_path_b)
             self.enemy = agents.RandomAgent(BOARD_SIZE)
@@ -135,10 +135,10 @@ class Evaluator(object):
                                           N_MCTS,
                                           IN_PLANES_ENEMY,
                                           noise=False)
-            self.enemy.model = model.PVNet(N_BLOCKS_ENEMY,
-                                           IN_PLANES_ENEMY,
-                                           OUT_PLANES_ENEMY,
-                                           BOARD_SIZE).to(device)
+            self.enemy.model = model.PVNetJ(N_BLOCKS_ENEMY,
+                                            IN_PLANES_ENEMY,
+                                            OUT_PLANES_ENEMY,
+                                            BOARD_SIZE).to(device)
         self.player_pi = None
         self.enemy_pi = None
         self.player_visit = None
@@ -420,13 +420,14 @@ if __name__ == '__main__':
     np.set_printoptions(suppress=True)
     np.random.seed(0)
     torch.manual_seed(0)
-
     if use_cuda:
         torch.cuda.manual_seed_all(0)
 
     # WebAPI
     print("Activate WebAPI...")
-    app_th = threading.Thread(target=app.run,
-                              kwargs={"host": "0.0.0.0", "port": 5000})
+    app_th = threading.Thread(
+        target=app.run,
+        kwargs={"host": "0.0.0.0", "port": 5000}
+    )
     app_th.start()
     main()
